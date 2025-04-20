@@ -1,0 +1,41 @@
+# Node-moduler
+node_modules/
+
+# Miljø‑variabler
+.env
+
+# Bygde filer / artefakter
+dist/
+build/
+
+# Loggfiler
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# Cache-filer
+.cache/
+*.tgz
+
+# Coverage rapporter
+coverage/
+*.lcov
+
+# OS-spesifikke filer
+.DS_Store
+Thumbs.db
+
+# Editor‑innstillinger
+.vscode/
+.idea/
+
+# PM2 / Forever (hvis du bruker dem)
+pm2.log
+forever.log
+
+# NPM-pakker og låse‑filer du ikke vil sjekke inn
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
