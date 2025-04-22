@@ -15,7 +15,7 @@ mongoose
 
 // Mongoose-skjemaer
 const CompanySchema = new mongoose.Schema({
-  _id: { type: String, required: true },
+  firmaId: { type: String, required: true, unique: true },
   navn: { type: String, required: true },
   jobbvareuttak: { type: String, default: "" },
   opprettet: { type: Date, default: Date.now },
@@ -46,10 +46,10 @@ app.post("/api/company", async (req, res) => {
   if (!firmaId || !navn) return res.status(400).json({ message: "firmaId og navn må være med" });
 
   try {
-    const eksisterer = await Company.findById(firmaId);
+    const eksisterer = await Company.findOne({ firmaId });
     if (eksisterer) return res.status(400).json({ message: "Firma-ID finnes allerede" });
 
-    const company = new Company({ _id: firmaId, navn });
+    const company = new Company({ firmaId, navn });
     await company.save();
     res.status(201).json(company);
   } catch (err) {
@@ -64,9 +64,9 @@ app.get("/api/company", async (req, res) => {
     const companies = await Company.find();
     const result = await Promise.all(
       companies.map(async (c) => {
-        const brukere = await User.find({ firmaId: c._id });
-        const arbeidsordre = await Order.find({ firmaId: c._id });
-        return { id: c._id, navn: c.navn, brukere, arbeidsordre };
+        const brukere = await User.find({ firmaId: c.firmaId });
+        const arbeidsordre = await Order.find({ firmaId: c.firmaId });
+        return { id: c.firmaId, navn: c.navn, brukere, arbeidsordre };
       })
     );
     res.json(result);
@@ -83,7 +83,10 @@ app.post("/api/user", async (req, res) => {
   const passord = req.body.passord;
   const rolle = req.body.rolle;
   try {
-    const company = await Company.findById(firmaId);
+    console.log("🔍 Prøver å finne firma med firmaId:", firmaId);
+const company = await Company.findOne({ firmaId });
+console.log("📦 Svar fra databasen:", company);
+
     if (!company) return res.status(400).json({ message: "Firmaet finnes ikke" });
 
     const user = new User({ firmaId, brukernavn, passord, rolle });
@@ -120,7 +123,7 @@ app.delete("/api/user", async (req, res) => {
 app.delete("/api/company", async (req, res) => {
   const { firmaId } = req.body;
   try {
-    await Company.deleteOne({ _id: firmaId });
+    await Company.deleteOne({ firmaId });
     await User.deleteMany({ firmaId });
     await Order.deleteMany({ firmaId });
     res.sendStatus(204);
@@ -180,8 +183,6 @@ app.get("/api/arbeidsordre/ordre/:ordreId", async (req, res) => {
 
 // Login
 app.post("/api/auth/login", async (req, res) => {
-  console.log("🛬 Mottok POST /api/auth/login");
-
   const firmaId = req.body.firmaId?.trim().toLowerCase();
   const brukernavn = req.body.brukernavn?.trim();
   const passord = req.body.passord;
@@ -193,18 +194,14 @@ app.post("/api/auth/login", async (req, res) => {
   try {
     console.log("🔐 Login attempt:", firmaId, brukernavn);
 
-    const alleFirmaer = await Company.find();
-    console.log("📂 Firmaer i databasen:", alleFirmaer.map(f => f._id));
-
-    console.log("🔍 Forsøker å finne firma med _id:", firmaId);
-    const company = await Company.findById(firmaId);
+    const company = await Company.findOne({ firmaId });
     if (!company) {
       console.log("❌ Firma ikke funnet:", firmaId);
       return res.status(400).json({ message: 'Firmaet finnes ikke.' });
     }
 
     const user = await User.findOne({
-      firmaId: company._id,
+      firmaId: company.firmaId,
       brukernavn: new RegExp(`^${brukernavn}$`, 'i'),
     });
 
@@ -215,14 +212,11 @@ app.post("/api/auth/login", async (req, res) => {
 
     console.log("✅ Login OK:", user.brukernavn);
     res.json({ firmaId: user.firmaId, brukernavn: user.brukernavn, rolle: user.rolle });
-
   } catch (err) {
     console.error("💥 Login serverfeil:", err);
     res.status(500).json({ message: 'Serverfeil ved innlogging.' });
   }
 });
-
-
 
 // Start server
 const PORT = process.env.PORT || 4000;
