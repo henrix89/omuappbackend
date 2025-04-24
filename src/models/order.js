@@ -1,26 +1,30 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const OrderSchema = new mongoose.Schema({
   firmaId: {
     type: String,
-    required: true
+    required: true,
+    lowercase: true,
+    trim: true,
   },
   ordreId: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
   },
   beskrivelse: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
   },
   varer: {
     type: Array,
-    default: []
+    default: [],
   },
   opprettet: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-module.exports = mongoose.model('Order', OrderSchema);
+module.exports = mongoose.model("Order", OrderSchema);

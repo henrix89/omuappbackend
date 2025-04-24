@@ -1,26 +1,10 @@
-const express = require('express');
-const router = express.Router();
-const User = require('../models/user');
+const mongoose = require("mongoose");
 
-router.post('/', async (req, res) => {
-  const { firmaId, brukernavn, passord, rolle } = req.body;
-  try {
-    const user = new User({ firmaId, brukernavn, passord, rolle });
-    await user.save();
-    res.status(201).json(user);
-  } catch (err) {
-    res.status(500).json({ message: 'Kunne ikke opprette bruker.' });
-  }
+const UserSchema = new mongoose.Schema({
+  firmaId: { type: String, required: true }, // match med company._id
+  brukernavn: { type: String, required: true },
+  passord: { type: String, required: true },
+  rolle: { type: String, required: true }
 });
 
-router.delete('/', async (req, res) => {
-  const { firmaId, brukernavn } = req.body;
-  try {
-    await User.deleteOne({ firmaId, brukernavn });
-    res.sendStatus(204);
-  } catch (err) {
-    res.status(500).json({ message: 'Kunne ikke slette bruker.' });
-  }
-});
-
-module.exports = router;
+module.exports = mongoose.model("User", UserSchema);
